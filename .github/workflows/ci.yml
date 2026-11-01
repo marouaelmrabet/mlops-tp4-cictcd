@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -9,28 +9,49 @@ on:
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Récupérer le code source du dépôt
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Configurer l'environnement Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
           cache: 'pip'
 
-      # 3. Installer les dépendances du projet
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Exécuter les tests avec Pytest et la couverture de code
       - name: Run pytest & check quality gates
         env:
           PYTHONPATH: .
         run: |
           pytest tests/ -v --cov=src --cov-report=term-missing
+
+  promote-model:
+    needs: run-tests
+    runs-on: ubuntu-latest
+    environment: production  # Bloque ici en attente de l'approbation manuelle
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run promotion script with approval
+        env:
+          PYTHONPATH: .
+        run: |
+          python promote.py --approve
