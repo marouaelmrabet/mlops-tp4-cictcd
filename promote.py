@@ -1,5 +1,7 @@
 import argparse
+
 from mlflow import MlflowClient
+
 from src.data import load_params
 
 # Configuration des arguments de la ligne de commande
